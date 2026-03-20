@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>质量月答题活动 - 账号系统</title>
+    <style>
+      :root {
+        --bg: #ffffff;
+        --surface: #ffffff;
+        --text: #0b0f19;
+        --muted: #5b6475;
+        --stroke: #e6e8ee;
+        --accent: #ff7a00;
+        --danger: #d92d20;
+        --ok: #067647;
+        --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+      }
+      * {
+        font-family: var(--font-sans);
+      }
+      body {
+        margin: 0;
+        font-family: var(--font-sans);
+        font-size: 14px;
+        line-height: 1.5;
+        background: linear-gradient(135deg, rgba(255, 122, 0, 0.22) 0%, rgba(255, 255, 255, 1) 55%);
+        color: var(--text);
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+      .wrap {
+        width: min(520px, 100%);
+      }
+      header {
+        margin-bottom: 14px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 6px;
+      }
+      .brand .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: var(--accent);
+        box-shadow: 0 0 0 6px rgba(255, 122, 0, 0.12);
+      }
+      .brand .title {
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+      }
+      header .header-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 0;
+      }
+      header .dot-red {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: var(--danger);
+        box-shadow: 0 0 0 6px rgba(217, 45, 32, 0.12);
+        flex-shrink: 0;
+      }
+      header h1 {
+        font-size: 18px;
+        margin: 0;
+        letter-spacing: 0.2px;
+      }
+      header p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        margin-top: 6px;
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--stroke);
+        border-radius: 14px;
+        padding: 16px;
+        transition: background var(--t-med, 180ms) ease;
+      }
+      .card:hover {
+        background: #f3f4f6;
+      }
+      .card h2 {
+        margin: 0;
+        font-size: 15px;
+      }
+      .tabs {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin: 12px 0 14px;
+      }
+      .tab {
+        border: 1px solid var(--stroke);
+        background: #ffffff;
+        color: var(--text);
+        padding: 10px 10px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 13px;
+        transition: background 140ms ease, border-color 140ms ease, transform 140ms ease;
+      }
+      .tab:hover {
+        background: #e6f0ff;
+        border-color: rgba(59, 130, 246, 0.35);
+        transform: translateY(-1px);
+      }
+      .tab.active {
+        border-color: rgba(255, 122, 0, 0.55);
+        box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.14);
+      }
+      label {
+        display: block;
+        margin: 10px 0 6px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--stroke);
+        background: #ffffff;
+        color: var(--text);
+        outline: none;
+      }
+      input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.18);
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+        align-items: center;
+      }
+      button {
+        border: 1px solid #111827;
+        background: #111827;
+        color: #ffffff;
+        padding: 10px 12px;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #0b1220;
+      }
+      button:active {
+        transform: translateY(1px);
+      }
+      .small {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .msg {
+        margin-top: 10px;
+        font-size: 13px;
+        color: var(--muted);
+        white-space: pre-wrap;
+      }
+      .msg.ok {
+        color: var(--ok);
+      }
+      .msg.err {
+        color: var(--danger);
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 12px;
+        color: rgba(17, 24, 39, 0.9);
+      }
+      input, button, .tab, label, .msg, .small {
+        font-family: var(--font-sans);
+      }
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      .pane {
+        display: none;
+      }
+      .pane.active {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div class="brand" aria-label="brand">
+          <span class="dot" aria-hidden="true"></span>
+          <span class="title">艾迪药业集团股份有限公司质量月活动</span>
+        </div>
+        <div class="header-title" aria-label="section title">
+          <span class="dot-red" aria-hidden="true"></span>
+          <h1>账号系统</h1>
+        </div>
+        <p>注册 / 登录 / 管理员登录</p>
+      </header>
+
+      <section class="card">
+        <h2>请选择入口</h2>
+        <div class="tabs" role="tablist" aria-label="auth tabs">
+          <button class="tab active" id="tab-login" type="button" role="tab" aria-selected="true">
+            用户登录
+          </button>
+          <button class="tab" id="tab-register" type="button" role="tab" aria-selected="false">
+            注册
+          </button>
+          <button class="tab" id="tab-admin" type="button" role="tab" aria-selected="false">
+            管理员登录
+          </button>
+        </div>
+
+        <div class="pane active" id="pane-login" role="tabpanel" aria-labelledby="tab-login">
+          <label>用户名</label>
+          <input id="loginUser" />
+          <label>密码</label>
+          <input id="loginPass" type="password" />
+          <div class="row">
+            <button id="btnLogin">登录</button>
+            <span class="small">登录成功会自动跳转到每日签到/答题</span>
+          </div>
+          <div id="loginMsg" class="msg"></div>
+        </div>
+
+        <div class="pane" id="pane-register" role="tabpanel" aria-labelledby="tab-register">
+          <label>用户名</label>
+          <input id="regUser" placeholder="至少 3 位" />
+          <label>密码</label>
+          <input id="regPass" type="password" placeholder="至少 6 位" />
+          <div class="row">
+            <button id="btnRegister">注册</button>
+            <span class="small">注册成功后请切到“用户登录”登录</span>
+          </div>
+          <div id="regMsg" class="msg"></div>
+        </div>
+
+        <div class="pane" id="pane-admin" role="tabpanel" aria-labelledby="tab-admin">
+          <label>管理员账号</label>
+          <input id="adminUser" />
+          <label>管理员密码</label>
+          <input id="adminPass" type="password" />
+          <div class="row">
+            <button id="btnAdminLogin">管理员登录</button>
+            <span class="small">管理员登录仅用于管理题库/后台接口</span>
+          </div>
+          <div id="adminMsg" class="msg"></div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      const API_BASE = localStorage.getItem("apiBase") || "http://localhost:3001";
+
+      const tokenKey = "authToken";
+      function getToken() {
+        return localStorage.getItem(tokenKey) || "";
+      }
+      function setToken(t) {
+        if (t) localStorage.setItem(tokenKey, t);
+        else localStorage.removeItem(tokenKey);
+      }
+
+      async function api(path, body, opts = {}) {
+        const headers = { "Content-Type": "application/json", ...(opts.headers || {}) };
+        const t = getToken();
+        if (t) headers.Authorization = "Bearer " + t;
+        const res = await fetch(API_BASE + path, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(body || {}),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || data.ok === false) {
+          const msg = data.message || ("HTTP " + res.status);
+          throw new Error(msg);
+        }
+        return data;
+      }
+
+      async function apiGet(path) {
+        const headers = {};
+        const t = getToken();
+        if (t) headers.Authorization = "Bearer " + t;
+        const res = await fetch(API_BASE + path, { headers });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || data.ok === false) {
+          const msg = data.message || ("HTTP " + res.status);
+          throw new Error(msg);
+        }
+        return data;
+      }
+
+      function setMsg(id, text, kind) {
+        const el = document.getElementById(id);
+        el.className = "msg" + (kind ? " " + kind : "");
+        el.textContent = text || "";
+      }
+
+      document.getElementById("btnRegister").addEventListener("click", async () => {
+        setMsg("regMsg", "提交中…");
+        try {
+          const username = document.getElementById("regUser").value.trim();
+          const password = document.getElementById("regPass").value;
+          const r = await api("/api/register", { username, password });
+          setMsg("regMsg", "注册成功：用户ID=" + r.user.id, "ok");
+        } catch (e) {
+          setMsg("regMsg", "注册失败：" + e.message, "err");
+        }
+      });
+
+      document.getElementById("btnLogin").addEventListener("click", async () => {
+        setMsg("loginMsg", "提交中…");
+        try {
+          const username = document.getElementById("loginUser").value.trim();
+          const password = document.getElementById("loginPass").value;
+          const r = await api("/api/login", { username, password });
+          setToken(r.token);
+          setMsg("loginMsg", "登录成功：角色=" + r.user.role, "ok");
+          window.location.href = "./activity.html";
+        } catch (e) {
+          const msg = e.message === "Failed to fetch" || e.message?.includes("NetworkError")
+            ? "无法连接服务器，请确认：1) 后端已启动（如 npm run dev）；2) 地址正确（默认 http://localhost:3001）"
+            : "登录失败：" + e.message;
+          setMsg("loginMsg", msg, "err");
+        }
+      });
+
+      document.getElementById("btnAdminLogin").addEventListener("click", async () => {
+        setMsg("adminMsg", "提交中…");
+        try {
+          const username = document.getElementById("adminUser").value.trim();
+          const password = document.getElementById("adminPass").value;
+          const r = await api("/api/admin/login", { username, password });
+          setToken(r.token);
+          window.location.href = "./admin.html";
+        } catch (e) {
+          setMsg("adminMsg", "管理员登录失败：" + e.message, "err");
+        }
+      });
+
+      function setActive(tabId) {
+        const tabs = [
+          { tab: "tab-login", pane: "pane-login" },
+          { tab: "tab-register", pane: "pane-register" },
+          { tab: "tab-admin", pane: "pane-admin" },
+        ];
+        for (const t of tabs) {
+          const isActive = t.tab === tabId;
+          const tabEl = document.getElementById(t.tab);
+          const paneEl = document.getElementById(t.pane);
+          tabEl.classList.toggle("active", isActive);
+          tabEl.setAttribute("aria-selected", isActive ? "true" : "false");
+          paneEl.classList.toggle("active", isActive);
+        }
+      }
+
+      document.getElementById("tab-login").addEventListener("click", () => setActive("tab-login"));
+      document.getElementById("tab-register").addEventListener("click", () => setActive("tab-register"));
+      document.getElementById("tab-admin").addEventListener("click", () => setActive("tab-admin"));
+    </script>
+  </body>
+</html>
+

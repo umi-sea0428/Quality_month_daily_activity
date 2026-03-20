@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>管理后台 - 质量月答题活动</title>
+    <style>
+      :root {
+        --bg: #ffffff;
+        --surface: #ffffff;
+        --text: #0b0f19;
+        --muted: #5b6475;
+        --stroke: #e6e8ee;
+        --accent: #ff7a00;
+        --accent-soft: rgba(255, 122, 0, 0.12);
+        --danger: #d92d20;
+        --ok: #067647;
+        --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+      }
+      * { font-family: var(--font-sans); box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: var(--font-sans);
+        font-size: 14px;
+        line-height: 1.5;
+        background: linear-gradient(135deg, rgba(255, 122, 0, 0.22) 0%, rgba(255, 255, 255, 1) 55%);
+        color: var(--text);
+        min-height: 100vh;
+        padding: 24px;
+      }
+      .wrap { max-width: 720px; margin: 0 auto; }
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+      header .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      header .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 999px;
+        background: var(--accent);
+        box-shadow: 0 0 0 6px var(--accent-soft);
+      }
+      header h1 { font-size: 20px; font-weight: 700; margin: 0; }
+      header .links { display: flex; gap: 12px; align-items: center; }
+      header a { color: var(--accent); text-decoration: none; font-size: 13px; }
+      header a:hover { text-decoration: underline; }
+      .card {
+        background: var(--surface);
+        border: 1px solid rgba(255, 122, 0, 0.2);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 16px;
+        box-shadow: 0 4px 20px rgba(255, 122, 0, 0.06);
+      }
+      .card h2 { margin: 0 0 14px; font-size: 16px; font-weight: 600; }
+      .small { font-size: 12px; color: var(--muted); }
+      button {
+        border: none;
+        background: linear-gradient(180deg, #ff8c1a 0%, var(--accent) 100%);
+        color: #fff;
+        padding: 10px 16px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 13px;
+      }
+      button:hover { opacity: 0.95; transform: translateY(-1px); }
+      button.secondary {
+        background: #fff;
+        color: var(--accent);
+        border: 1px solid rgba(255, 122, 0, 0.4);
+        font-weight: 500;
+      }
+      button.secondary:hover { background: var(--accent-soft); }
+      label { display: block; margin: 10px 0 4px; font-size: 13px; color: var(--muted); }
+      input[type="text"], input[type="password"], input[type="file"], select, textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--stroke);
+        font-family: var(--font-sans);
+        font-size: 14px;
+      }
+      input:focus, select:focus, textarea:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px var(--accent-soft);
+      }
+      textarea { min-height: 80px; resize: vertical; }
+      .msg { margin-top: 10px; font-size: 13px; }
+      .msg.ok { color: var(--ok); }
+      .msg.err { color: var(--danger); }
+      .table-wrap { overflow-x: auto; margin-top: 12px; }
+      table { width: 100%; border-collapse: collapse; font-size: 13px; }
+      th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--stroke); }
+      th { color: var(--muted); font-weight: 600; }
+      .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div class="brand">
+          <span class="dot" aria-hidden="true"></span>
+          <h1>管理后台</h1>
+        </div>
+        <div class="links">
+          <button class="secondary" id="btnLogout">退出登录</button>
+          <a href="./index.html">返回登录页</a>
+        </div>
+      </header>
+
+      <section class="card" style="border-color: rgba(217, 45, 32, 0.3);">
+        <h2>连接检测</h2>
+        <p class="small">若下方「加载名单」「加载用户列表」一直请求失败，请先点「检测连接」。若检测失败，请用本地服务器打开本页面（不要直接双击 HTML）。</p>
+        <p class="small"><strong>后端地址：</strong><code id="apiBaseDisplay"></code></p>
+        <div class="row">
+          <button class="secondary" id="btnCheckConnection">检测连接</button>
+        </div>
+        <div id="connectionMsg" class="msg"></div>
+      </section>
+
+      <section class="card">
+        <h2>导出参与人员积分</h2>
+        <p class="small">获取全部活动参与用户及其总积分，可导出为 CSV 文件。</p>
+        <div class="row">
+          <button id="btnLoadParticipants">加载名单</button>
+          <button class="secondary" id="btnExportCsv" disabled>导出 CSV</button>
+        </div>
+        <div class="table-wrap">
+          <table aria-label="参与人员积分">
+            <thead>
+              <tr>
+                <th style="width:60px">序号</th>
+                <th>用户名</th>
+                <th style="width:100px">积分</th>
+              </tr>
+            </thead>
+            <tbody id="participantsBody"></tbody>
+          </table>
+        </div>
+        <div id="participantsMsg" class="msg"></div>
+      </section>
+
+      <section class="card">
+        <h2>账号密码管理</h2>
+        <p class="small">选择用户并设置新密码，仅可修改普通用户（参与活动账号）的密码。</p>
+        <div class="row">
+          <button class="secondary" id="btnLoadUsers">加载用户列表</button>
+        </div>
+        <label>选择用户</label>
+        <select id="passwordUserId">
+          <option value="">请先加载用户列表</option>
+        </select>
+        <label>新密码（至少 6 位）</label>
+        <input type="password" id="newPassword" placeholder="新密码" autocomplete="new-password" />
+        <label>确认新密码</label>
+        <input type="password" id="newPasswordConfirm" placeholder="再次输入新密码" autocomplete="new-password" />
+        <div class="row" style="margin-top:14px">
+          <button id="btnUpdatePassword">修改密码</button>
+        </div>
+        <div id="passwordMsg" class="msg"></div>
+      </section>
+
+      <section class="card">
+        <h2>添加题目</h2>
+        <p class="small">在题库中新增一道题目，选项 C、D 可留空。</p>
+        <label>分类（选填）</label>
+        <input type="text" id="qTopic" placeholder="如：质量安全" />
+        <label>题目内容 *</label>
+        <textarea id="qQuestion" placeholder="题干文字" required></textarea>
+        <label>选项 A *</label>
+        <input type="text" id="qA" placeholder="选项 A" required />
+        <label>选项 B *</label>
+        <input type="text" id="qB" placeholder="选项 B" required />
+        <label>选项 C（选填）</label>
+        <input type="text" id="qC" placeholder="选项 C" />
+        <label>选项 D（选填）</label>
+        <input type="text" id="qD" placeholder="选项 D" />
+        <label>正确答案 *</label>
+        <select id="qCorrect">
+          <option value="A">A</option>
+          <option value="B">B</option>
+          <option value="C">C</option>
+          <option value="D">D</option>
+        </select>
+        <div class="row" style="margin-top:14px">
+          <button id="btnAddQuestion">添加题目</button>
+        </div>
+        <div id="addQuestionMsg" class="msg"></div>
+      </section>
+
+      <section class="card">
+        <h2>批量导入题目（Excel）</h2>
+        <p class="small">上传 XLSX，第一张表。列名支持：题目/题干、A/B/C/D、答案/正确答案、主题/分类。导入模式：追加或替换全部题库。</p>
+        <label>导入模式</label>
+        <select id="importMode">
+          <option value="append">追加</option>
+          <option value="replace">替换全部</option>
+        </select>
+        <label>选择文件（.xlsx）</label>
+        <input type="file" id="importFile" accept=".xlsx,.xls" />
+        <div class="row" style="margin-top:14px">
+          <button class="secondary" id="btnImport">上传并导入</button>
+        </div>
+        <div id="importMsg" class="msg"></div>
+      </section>
+    </div>
+
+    <script>
+      const tokenKey = "authToken";
+      const API_BASE = localStorage.getItem("apiBase") || "http://localhost:3001";
+
+      document.getElementById("apiBaseDisplay").textContent = API_BASE;
+
+      if (window.location.protocol === "file:") {
+        document.getElementById("connectionMsg").textContent = "当前通过「文件」方式打开页面，浏览器可能阻止请求。请用本地服务器打开（见下方说明）。";
+        document.getElementById("connectionMsg").className = "msg err";
+      }
+
+      function getToken() { return localStorage.getItem(tokenKey) || ""; }
+
+      function setMsg(id, text, kind) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.className = "msg" + (kind ? " " + kind : "");
+        el.textContent = text || "";
+      }
+
+      async function apiGet(path) {
+        let res;
+        try {
+          res = await fetch(API_BASE + path, {
+            headers: { Authorization: "Bearer " + getToken() },
+          });
+        } catch (e) {
+          throw new Error("无法连接服务器，请确认后端已启动且地址正确（" + API_BASE + "）");
+        }
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 401 || res.status === 403) {
+          window.location.href = "./index.html";
+          throw new Error("请使用管理员账号登录");
+        }
+        if (!res.ok || data.ok === false) {
+          const msg = data.message || "请求失败 (HTTP " + res.status + ")";
+          throw new Error(msg);
+        }
+        return data;
+      }
+
+      async function apiPost(path, body) {
+        const res = await fetch(API_BASE + path, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + getToken() },
+          body: JSON.stringify(body || {}),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 401 || res.status === 403) {
+          window.location.href = "./index.html";
+          throw new Error("请使用管理员账号登录");
+        }
+        if (!res.ok || data.ok === false) throw new Error(data.message || "请求失败");
+        return data;
+      }
+
+      let participantsData = [];
+
+      function fillUserSelect(rows) {
+        const sel = document.getElementById("passwordUserId");
+        if (!sel) return;
+        const list = Array.isArray(rows) ? rows : [];
+        sel.innerHTML = list.length
+          ? "<option value=\"\">请选择用户</option>" + list.map((r) => `<option value="${r.id}">${escapeHtml(String(r.username || ""))} (ID:${r.id})</option>`).join("")
+          : "<option value=\"\">暂无用户</option>";
+      }
+
+      document.getElementById("btnLoadParticipants").addEventListener("click", async () => {
+        setMsg("participantsMsg", "加载中…");
+        try {
+          const r = await apiGet("/api/admin/participants");
+          const rows = Array.isArray(r.rows) ? r.rows : [];
+          participantsData = rows;
+          const tbody = document.getElementById("participantsBody");
+          if (!tbody) return;
+          tbody.innerHTML = participantsData
+            .map((row, i) => `<tr><td>${i + 1}</td><td>${escapeHtml(String(row.username || ""))}</td><td><b>${Number(row.points) || 0}</b></td></tr>`)
+            .join("");
+          document.getElementById("btnExportCsv").disabled = participantsData.length === 0;
+          fillUserSelect(participantsData.map((row) => ({ id: row.id, username: row.username })));
+          setMsg("participantsMsg", participantsData.length ? `共 ${participantsData.length} 人，表格已更新` : "暂无参与人员（请先在登录页注册普通用户）", "ok");
+        } catch (e) {
+          setMsg("participantsMsg", e.message || "加载失败", "err");
+          try {
+            const r2 = await apiGet("/api/admin/users");
+            fillUserSelect(Array.isArray(r2.rows) ? r2.rows : []);
+          } catch (_) {}
+        }
+      });
+
+      document.getElementById("btnLoadUsers").addEventListener("click", async () => {
+        setMsg("passwordMsg", "加载中…");
+        try {
+          const r = await apiGet("/api/admin/users");
+          const rows = Array.isArray(r.rows) ? r.rows : [];
+          fillUserSelect(rows);
+          setMsg("passwordMsg", rows.length ? `已加载 ${rows.length} 个用户，下拉框已更新` : "暂无普通用户（请先在登录页注册）", rows.length ? "ok" : "");
+        } catch (e) {
+          setMsg("passwordMsg", e.message || "加载失败", "err");
+        }
+      });
+
+      document.getElementById("btnUpdatePassword").addEventListener("click", async () => {
+        const userId = document.getElementById("passwordUserId").value;
+        const newPassword = document.getElementById("newPassword").value;
+        const confirmPassword = document.getElementById("newPasswordConfirm").value;
+        if (!userId) {
+          setMsg("passwordMsg", "请先加载用户列表并选择用户", "err");
+          return;
+        }
+        if (newPassword.length < 6) {
+          setMsg("passwordMsg", "新密码至少 6 位", "err");
+          return;
+        }
+        if (newPassword !== confirmPassword) {
+          setMsg("passwordMsg", "两次输入的密码不一致", "err");
+          return;
+        }
+        setMsg("passwordMsg", "提交中…");
+        try {
+          await apiPost("/api/admin/users/password", { userId: Number(userId), newPassword });
+          setMsg("passwordMsg", "密码已修改", "ok");
+          document.getElementById("newPassword").value = "";
+          document.getElementById("newPasswordConfirm").value = "";
+        } catch (e) {
+          setMsg("passwordMsg", e.message || "修改失败", "err");
+        }
+      });
+
+      document.getElementById("btnExportCsv").addEventListener("click", () => {
+        if (participantsData.length === 0) return;
+        const BOM = "\uFEFF";
+        const header = "序号,用户名,积分\n";
+        const rows = participantsData.map((r, i) => `${i + 1},${r.username},${r.points}`).join("\n");
+        const blob = new Blob([BOM + header + rows], { type: "text/csv;charset=utf-8" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "参与人员积分_" + new Date().toISOString().slice(0, 10) + ".csv";
+        a.click();
+        URL.revokeObjectURL(a.href);
+        setMsg("participantsMsg", "已导出 CSV", "ok");
+      });
+
+      function escapeHtml(s) {
+        return String(s ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;");
+      }
+
+      document.getElementById("btnAddQuestion").addEventListener("click", async () => {
+        const topic = document.getElementById("qTopic").value.trim();
+        const question = document.getElementById("qQuestion").value.trim();
+        const option_a = document.getElementById("qA").value.trim();
+        const option_b = document.getElementById("qB").value.trim();
+        const option_c = document.getElementById("qC").value.trim();
+        const option_d = document.getElementById("qD").value.trim();
+        const correct = document.getElementById("qCorrect").value;
+        setMsg("addQuestionMsg", "提交中…");
+        try {
+          const r = await apiPost("/api/admin/questions", {
+            topic: topic || undefined,
+            question,
+            option_a,
+            option_b,
+            option_c: option_c || undefined,
+            option_d: option_d || undefined,
+            correct,
+          });
+          setMsg("addQuestionMsg", "题目已添加，ID：" + r.id, "ok");
+          document.getElementById("qTopic").value = "";
+          document.getElementById("qQuestion").value = "";
+          document.getElementById("qA").value = "";
+          document.getElementById("qB").value = "";
+          document.getElementById("qC").value = "";
+          document.getElementById("qD").value = "";
+        } catch (e) {
+          setMsg("addQuestionMsg", e.message || "添加失败", "err");
+        }
+      });
+
+      document.getElementById("btnImport").addEventListener("click", async () => {
+        const file = document.getElementById("importFile").files[0];
+        const mode = document.getElementById("importMode").value;
+        if (!file) {
+          setMsg("importMsg", "请先选择文件", "err");
+          return;
+        }
+        setMsg("importMsg", "上传中…");
+        try {
+          const form = new FormData();
+          form.append("file", file);
+          const r = await fetch(API_BASE + "/api/admin/questions/import?mode=" + mode, {
+            method: "POST",
+            headers: { Authorization: "Bearer " + getToken() },
+            body: form,
+          });
+          const data = await r.json().catch(() => ({}));
+          if (r.status === 401 || r.status === 403) {
+            window.location.href = "./index.html";
+            return;
+          }
+          if (!r.ok || data.ok === false) throw new Error(data.message || "导入失败");
+          setMsg("importMsg", `导入成功：新增 ${data.inserted} 题，题库共 ${data.totalInDb} 题`, "ok");
+          document.getElementById("importFile").value = "";
+        } catch (e) {
+          setMsg("importMsg", e.message || "导入失败", "err");
+        }
+      });
+
+      document.getElementById("btnLogout").addEventListener("click", () => {
+        localStorage.removeItem(tokenKey);
+        window.location.href = "./index.html";
+      });
+
+      document.getElementById("btnCheckConnection").addEventListener("click", async () => {
+        const msgEl = document.getElementById("connectionMsg");
+        msgEl.textContent = "检测中…";
+        msgEl.className = "msg";
+        try {
+          const res = await fetch(API_BASE + "/api/health");
+          const data = await res.json().catch(() => ({}));
+          if (res.ok && data.ok) {
+            msgEl.textContent = "连接成功，后端运行正常。若仍无法加载用户，请确认已用管理员账号登录。";
+            msgEl.className = "msg ok";
+          } else {
+            msgEl.textContent = "请求失败 (HTTP " + res.status + ")：" + (data.message || res.statusText);
+            msgEl.className = "msg err";
+          }
+        } catch (e) {
+          msgEl.textContent = "无法连接： " + (e.message || "请确认后端已启动 (npm start)，且本页面通过 http:// 打开（不要用 file:// 直接打开 HTML）。";
+          msgEl.className = "msg err";
+        }
+      });
+
+      (async () => {
+        if (!getToken()) { window.location.href = "./index.html"; return; }
+        try {
+          const r = await apiGet("/api/me");
+          if (r.user && r.user.role !== "admin") window.location.href = "./index.html";
+        } catch {
+          window.location.href = "./index.html";
+          return;
+        }
+        try {
+          const u = await apiGet("/api/admin/users");
+          fillUserSelect(u.rows || []);
+        } catch (_) {
+          setMsg("passwordMsg", "用户列表加载失败，请点击「加载用户列表」重试", "err");
+        }
+      })();
+    </script>
+  </body>
+</html>
